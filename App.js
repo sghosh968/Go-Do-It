@@ -13,11 +13,23 @@ class App extends React.Component {
         {id: 4, title: "Task 4", status: "Incomplete", deadline: "20/11/2016"}
       ]
     }
+    this.addTasK = this.addTasK.bind(this);
+  }
+  addTasK(newTaskData) {
+    this.setState({
+      tasks: this.state.tasks.push({
+        id: this.state.tasks.length + 1,
+        title: newTaskData.title,
+        status: "Incomplete",
+        deadline: newTaskData.deadline
+      })
+    })
   }
   render() {
     return(
       <div>
-        <TasksTable tasksList={this.state.tasks} />
+        <TasksTable tasksList={this.state.tasks}  />
+        <NewTaskForm onAddTask={this.addTasK} />
       </div>
     );
   }
@@ -88,6 +100,32 @@ class TaskTimer extends React.Component {
     return(
       <div>
         {this.state.timeLeft}
+      </div>
+    )
+  }
+}
+
+// Task Form
+class NewTaskForm extends React.Component {
+  constructor(props){
+    super(props);
+  }
+  render() {
+    return(
+      <div>
+        <form onSubmit="this.props.onAddTask()">
+          <div>
+            <label>Title</label>&nbsp;&nbsp;
+            <input type='text' required />
+          </div>
+          <div>
+            <label>To be done by</label>&nbsp;&nbsp;
+            <input type="datetime-local" required />
+          </div>
+          <div>
+            <button type="submit">Add task</button>
+          </div>
+        </form>
       </div>
     )
   }
