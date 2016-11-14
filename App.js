@@ -124,6 +124,7 @@ class NewTaskForm extends React.Component {
 
     this.handleInputFieldChange = this.handleInputFieldChange.bind(this);
     this.handleFormSubmit = this.handleFormSubmit.bind(this)
+    this.resetTaskForm = this.resetTaskForm.bind(this)
   }
   componentWillMount() {
     this.state = {
@@ -151,24 +152,29 @@ class NewTaskForm extends React.Component {
   handleFormSubmit(e) {
     this.props.onAddTask(this.state.newTask);
     e.preventDefault();
-    debugger
+    this.resetTaskForm
+  }
+  resetTaskForm() {
     this.refs.taskForm.reset();
   }
   render() {
-    // onSubmit={this.props.onAddTask(this.state.newTask)}
     return(
       <div>
+      <h2>New Task</h2>
         <form ref="taskForm" onSubmit={this.handleFormSubmit}>
-          <div>
-            <label>Title</label>&nbsp;&nbsp;
-            <input type='text' name="title" onChange={this.handleInputFieldChange} required />
-          </div>
-          <div>
-            <label>To be done by</label>&nbsp;&nbsp;
-            <input type="datetime-local" name="deadline" onChange={this.handleInputFieldChange} required />
-          </div>
-          <div>
-            <button type="submit">Add task</button>
+          <div className="row uniform">
+            <div className="6u 12u$(xsmall)">
+              <input type='text' name="title" onChange={this.handleInputFieldChange} placeholder="Task Title" required />
+            </div>
+            <div className="6u 12u$(xsmall)">
+              <input type="datetime-local" name="deadline" onChange={this.handleInputFieldChange} required />
+            </div>
+            <div className="12u$">
+              <ul className="actions">
+                <li><input className="button small" type="submit" value="Add task" /></li>
+                <li><input className="alt small" type="reset" value="Reset" /></li>
+              </ul>
+            </div>
           </div>
         </form>
       </div>
