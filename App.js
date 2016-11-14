@@ -11,12 +11,17 @@ class App extends React.Component {
         {id: 2, title: "Task 2", status: "Complete", deadline: "13/11/2016"},
         {id: 3, title: "Task 3", status: "Incomplete", deadline: "12/11/2016"},
         {id: 4, title: "Task 4", status: "Incomplete", deadline: "20/11/2016"}
-      ]
+      ],
+      taskDataToForm: {}
     }
-    this.addTasK = this.addTasK.bind(this);
+    this.addTask = this.addTask.bind(this);
+    this.updateTask = this.updateTask.bind(this);
+    this.deleteTask = this.deleteTask.bind(this);
+    this.setTaskDataForForm = this.setTaskDataForForm.bind(this);
   }
-  addTasK(newTaskData) {
-    // console.log("In method addTasK");
+  addTask(newTaskData) {
+    debugger
+    // console.log("In method addTask");
     // console.log("newTaskData");
     // console.log(newTaskData);
     console.log("Before adding tasks :-");
@@ -35,11 +40,49 @@ class App extends React.Component {
     console.log("After adding tasks :-");
     console.log(this.state.tasks);
   }
+
+  updateTask(newTaskData) {
+    const newTasksCollection = this.state.tasks
+    const taskIndexInCollection = newTasksCollection.findIndex(task => task.id === newTaskData.id)
+    const taskToBeUpdated =  newTasksCollection[taskIndexInCollection]
+    taskToBeUpdated.title = newTaskData.title
+    taskToBeUpdated.deadline = newTaskData.deadline
+    newTasksCollection[taskIndexInCollection] = taskToBeUpdated
+    this.setState({
+      tasks: newTasksCollection
+    })
+  }
+
+  deleteTask(newTaskData) {
+    if (confirm('Are you sure?')) {
+      const newTasksCollection = this.state.tasks
+      const taskIndexInCollection = newTasksCollection.findIndex(task => task.id === newTaskData.id)
+      newTasksCollection.splice(taskIndexInCollection, 1);
+      this.setState({
+        tasks: newTasksCollection
+      })
+    }
+    else {
+      return false;
+    }
+  }
+
+  setTaskDataForForm(taskId) {
+    console.log("In method setTaskDataForForm");
+    console.log("Passed in taskId is :-");
+    console.log(taskId);
+    const taskData = this.state.tasks.find(task => task.id === taskId)
+    this.setState({
+      taskDataToForm: taskData
+    })
+
+  }
   render() {
     return(
       <div>
-        <TasksTable tasksList={this.state.tasks}  />
-        <NewTaskForm onAddTask={this.addTasK} />
+        <TasksTable tasksList={this.state.tasks} tasksTableTaskEditClickHandler={this.setTaskDataForForm}  tasksTableTaskDeleteClickHandler={this.deleteTask} />
+        <NewTaskForm taskData={this.state.taskDataToForm} OnTaskFormSubmit={this.updateTask} formFor="Update" />
+        <NewTaskForm OnTaskFormSubmit={this.addTask} formFor="New" />
       </div>
     );
   }
@@ -55,7 +98,7 @@ class TasksTable extends React.Component {
 
     let taskRows = this.props.tasksList.map(task => {
       return (
-        <TaskRow key={task.id} taskData={task} />
+        <TaskRow key={task.id} taskData={task} taskRowTaskEditClickHandler={this.props.tasksTableTaskEditClickHandler} taskRowTaskDeleteClickHandler={this.props.tasksTableTaskDeleteClickHandler} />
       );
     })
     return(
@@ -65,6 +108,7 @@ class TasksTable extends React.Component {
           <th>Title</th>
           <th>Status</th>
           <th>Time left for deadline</th>
+          <th></th>
         </thead>
         <tbody>
           {taskRows}
@@ -76,6 +120,13 @@ class TasksTable extends React.Component {
 
 // Task row component
 class TaskRow extends React.Component {
+  constructor(props) {
+    super(props);
+    this.taskEditClickHandler = this.taskEditClickHandler.bind(this);
+  }
+  taskEditClickHandler() {
+    this.props.taskRowTaskEditClickHandler(this.props.taskData.id)
+  }
   render() {
     return(
       <tr>
@@ -84,6 +135,10 @@ class TaskRow extends React.Component {
         <td>{this.props.taskData.status}</td>
         <td>
           <TaskTimer taskDeadline={this.props.taskData.deadline} />
+        </td>
+        <td>
+          <button onClick={this.taskEditClickHandler}>Edit</button>&nbsp;&nbsp;
+          <button onClick={() => this.props.taskRowTaskDeleteClickHandler(this.props.taskData)}>Delete</button>
         </td>
       </tr>
     )
@@ -121,17 +176,32 @@ class TaskTimer extends React.Component {
 class NewTaskForm extends React.Component {
   constructor(props){
     super(props);
-
     this.handleInputFieldChange = this.handleInputFieldChange.bind(this);
     this.handleFormSubmit = this.handleFormSubmit.bind(this)
     this.resetTaskForm = this.resetTaskForm.bind(this)
   }
-  componentWillMount() {
-    this.state = {
-      newTask: {title: "",
-                deadline: null}
+  componentWillReceiveProps(newProps) {
+    if(!!newProps.taskData){
+      this.setState({
+        newTask: newProps.taskData
+      })
     }
   }
+
+  componentWillMount() {
+    if(!!this.props.taskData){
+      this.state = {
+        newTask: this.props.taskData
+      }
+    }
+    else{
+      this.state = {
+        newTask: {title: "",
+                  deadline: ""}
+      }
+    }
+  }
+
   handleInputFieldChange(e) {
     const newTask = this.state.newTask;
     switch (e.target.name) {
@@ -150,9 +220,9 @@ class NewTaskForm extends React.Component {
     }
   }
   handleFormSubmit(e) {
-    this.props.onAddTask(this.state.newTask);
+    this.props.OnTaskFormSubmit(this.state.newTask);
     e.preventDefault();
-    this.resetTaskForm
+    this.resetTaskForm()
   }
   resetTaskForm() {
     this.refs.taskForm.reset();
@@ -160,18 +230,18 @@ class NewTaskForm extends React.Component {
   render() {
     return(
       <div>
-      <h2>New Task</h2>
-        <form ref="taskForm" onSubmit={this.handleFormSubmit}>
+      <h2>{this.props.formFor} Task</h2>
+        <form ref="taskForm" onSubmit={this.handleFormSubmit} action="#">
           <div className="row uniform">
             <div className="6u 12u$(xsmall)">
-              <input type='text' name="title" onChange={this.handleInputFieldChange} placeholder="Task Title" required />
+              <input type='text' name="title" value={this.state.newTask.title} onChange={this.handleInputFieldChange} placeholder="Task Title" required />
             </div>
             <div className="6u 12u$(xsmall)">
-              <input type="datetime-local" name="deadline" onChange={this.handleInputFieldChange} required />
+              <input type="datetime-local" name="deadline"  value={this.state.newTask.deadline} onChange={this.handleInputFieldChange} required />
             </div>
             <div className="12u$">
               <ul className="actions">
-                <li><input className="button small" type="submit" value="Add task" /></li>
+                <li><input className="button small" type="submit" value={this.props.formFor === 'New' ? 'Add Task' : 'Update Task' } /></li>
                 <li><input className="alt small" type="reset" value="Reset" /></li>
               </ul>
             </div>
