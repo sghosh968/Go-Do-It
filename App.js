@@ -16,14 +16,24 @@ class App extends React.Component {
     this.addTasK = this.addTasK.bind(this);
   }
   addTasK(newTaskData) {
-    this.setState({
-      tasks: this.state.tasks.push({
-        id: this.state.tasks.length + 1,
-        title: newTaskData.title,
-        status: "Incomplete",
-        deadline: newTaskData.deadline
-      })
+    // console.log("In method addTasK");
+    // console.log("newTaskData");
+    // console.log(newTaskData);
+    console.log("Before adding tasks :-");
+    console.log(this.state.tasks);
+
+    const newTasksCollection = this.state.tasks
+    newTasksCollection.push({
+      id: this.state.tasks.length + 1,
+      title: newTaskData.title,
+      status: "Incomplete",
+      deadline: newTaskData.deadline
     })
+    this.setState({
+      tasks: newTasksCollection
+    })
+    console.log("After adding tasks :-");
+    console.log(this.state.tasks);
   }
   render() {
     return(
@@ -41,6 +51,8 @@ class TasksTable extends React.Component {
     super(props);
   }
   render() {
+    console.log("In render() for TasksTable component");
+
     let taskRows = this.props.tasksList.map(task => {
       return (
         <TaskRow key={task.id} taskData={task} />
@@ -109,18 +121,51 @@ class TaskTimer extends React.Component {
 class NewTaskForm extends React.Component {
   constructor(props){
     super(props);
+
+    this.handleInputFieldChange = this.handleInputFieldChange.bind(this);
+    this.handleFormSubmit = this.handleFormSubmit.bind(this)
+  }
+  componentWillMount() {
+    this.state = {
+      newTask: {title: "",
+                deadline: null}
+    }
+  }
+  handleInputFieldChange(e) {
+    const newTask = this.state.newTask;
+    switch (e.target.name) {
+    case "title":
+      newTask.title = e.target.value;
+      this.setState({
+        newTask: newTask
+      })
+      break;
+    case "deadline":
+      newTask.deadline = e.target.value;
+      this.setState({
+        newTask: newTask
+      })
+      break;
+    }
+  }
+  handleFormSubmit(e) {
+    this.props.onAddTask(this.state.newTask);
+    e.preventDefault();
+    debugger
+    this.refs.taskForm.reset();
   }
   render() {
+    // onSubmit={this.props.onAddTask(this.state.newTask)}
     return(
       <div>
-        <form onSubmit="this.props.onAddTask()">
+        <form ref="taskForm" onSubmit={this.handleFormSubmit}>
           <div>
             <label>Title</label>&nbsp;&nbsp;
-            <input type='text' required />
+            <input type='text' name="title" onChange={this.handleInputFieldChange} required />
           </div>
           <div>
             <label>To be done by</label>&nbsp;&nbsp;
-            <input type="datetime-local" required />
+            <input type="datetime-local" name="deadline" onChange={this.handleInputFieldChange} required />
           </div>
           <div>
             <button type="submit">Add task</button>
